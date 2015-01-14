@@ -9,14 +9,17 @@
   <title>Tomasulo algorithm simulator (protoype)</title>
 </head>
 <body>
+<div id="instructions">
 <h1>Tomasulo algorithm simulator (protoype)</h1>
-<p>This simulates <a href="https://en.wikipedia.org/wiki/Tomasulo_algorithm">Tomasulo's algorithm</a> for a floating-point MIPS-like instruction pipeline, demonstrating out-of-order execution. The source is on <a href="https://github.com/nathantypanski/tomasulo-simulator">GitHub</a></p>
-<p>Click instructions on the right to issue and execute them. Instructions will only execute if all of their data dependencies have been resolved.</p>
-<p>Regs[x] is the value at location x from the register file. Color codes are as follows:
+<p>This simulates <a href="https://en.wikipedia.org/wiki/Tomasulo_algorithm">Tomasulo's algorithm</a> for a floating-point MIPS-like instruction pipeline, demonstrating out-of-order execution. The source is on <a href="https://github.com/nathantypanski/tomasulo-simulator">GitHub</a>.</p>
+<p><b>Click instructions on the right</b> to issue and execute them. <b>Instructions will only execute if all of their data dependencies have been resolved</b>, but they may issue in any order (though at least issuing them in order is recommended). Currently, loads have two-step execution and still require a writeback cycle. Regs[x] is the value at location x from the register file.</p>
+<p>Color codes are as follows:
 <i class="destination">destination</i>
 <i class="source">source</i>
 <i class="sourceOccupied">occupied source</i>
-<i class="destinationOccupied">occupied destination</i>
+<i class="destinationOccupied">occupied destination</i>.
 </p>
+</div>
+
 </body>
 </html>
