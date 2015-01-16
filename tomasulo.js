@@ -612,6 +612,7 @@ $(function(){
     is.read(asm.LD  ('F6',  'R2', 32));
     is.read(asm.LD  ('F2',  'R3', 44));
     is.read(asm.MULD('F0',  'F2', 'F4'));
+    is.read(asm.ADDD('F10', 'F12','F8'));
     is.read(asm.SUBD('F8',  'F2', 'F6'));
     is.read(asm.DIVD('F10', 'F0', 'F6'));
     is.read(asm.ADDD('F6',  'F8', 'F2'));
