@@ -394,7 +394,7 @@ var ReservationStation = function(registerStatus) {
 
     object.each = function*() {
         for(var unit of executionUnits)
-            yield unt;
+            yield unit;
     }
 
     object.writeBack = function(finishedUnit) {
