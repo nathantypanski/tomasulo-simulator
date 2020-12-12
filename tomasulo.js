@@ -1,16 +1,6 @@
-var column_names = [
-    'Name',
-    'Busy',
-    'Op',
-    'Vj',
-    'Vk',
-    'Qj',
-    'Qk',
-    'A',
-    'Result'
-];
+'use strict';
 
-var instructionStatusColumnNames = [
+let instructionStatusColumnNames = [
     'Instruction',
     'Issue',
     'Execute',
@@ -20,7 +10,7 @@ var instructionStatusColumnNames = [
 
 // Make all functions automatically curryable..
 Function.prototype.curry = function () {
-    var slice = Array.prototype.slice,
+    let slice = Array.prototype.slice,
         args = slice.apply(arguments),
         that = this;
     return function ( ) {
@@ -35,7 +25,7 @@ function defined(v) {
 
 
 function heading(row, words, tooltip) {
-    var heading = {'text': words};
+    let heading = {'text': words};
 
     if (defined(tooltip)) {
         heading['title'] = tooltip;
@@ -46,9 +36,9 @@ function heading(row, words, tooltip) {
 
 
 function newTable(kwargs) {
-    var table = document.createElement('table');
+    let table = document.createElement('table');
     if (defined(kwargs['caption'])) {
-        var table_caption = document.createElement('caption');
+        let table_caption = document.createElement('caption');
         table_caption.appendChild(document.createTextNode(kwargs['caption']));
         table.appendChild(table_caption);
     }
@@ -56,7 +46,7 @@ function newTable(kwargs) {
         $(table).attr('id', kwargs['id']);
     }
     if (defined(kwargs['headings'])) {
-        tr = table.insertRow();
+        const tr = table.insertRow();
         _.map(kwargs['headings'], function(h) {
             heading.apply(heading, [tr].concat(h));
         });
@@ -66,27 +56,29 @@ function newTable(kwargs) {
 
 
 function Address(register, offset) {
-    var addr = {
+    let addr = {
         'register': register,
         'offset': offset,
         'toString': function() {
             if (defined(offset)) {
-                var sign = offset < 0 ? ' - ' : ' + ';
+                let sign = offset < 0 ? ' - ' : ' + ';
                 return 'Regs[' + register.toString() + ']'
                     + sign
                     + offset.toString();
             }
-            return 'Regs[' + register.toString() + ']'
+            return 'Regs[' + register.toString() + ']';
         }
-    }
+    };
     return addr;
 }
 
 
 // An actual register.
-function Register(name) {
-    this.name = name;
-    this.value = null;
+class Register {
+    constructor(name) {
+        this.name = name;
+        this.value = null;
+    }
 }
 
 
@@ -96,39 +88,39 @@ function RegisterFile() {
     function regName(name, index) {
         return name + index.toString();
     }
-    registerNames = _.map(_.range(0, 16, 2), regName.curry('F')).concat(
-                    _.map(_.range(0, 8),     regName.curry('R')));
+    const registerNames = _.map(_.range(0, 16, 2), regName.curry('F')).concat(
+        _.map(_.range(0, 8),     regName.curry('R')));
 
-    regfile = {}
+    let regfile = {};
     _.map(registerNames, function(name) {
         regfile[name] = new Register(name);
     });
 
     regfile['each'] = function*() {
-        for (var name of registerNames) {
-            yield regfile[name]
+        for (let name of registerNames) {
+            yield regfile[name];
         }
-    }
-    return regfile
+    };
+    return regfile;
 }
 
 
 function RegisterStat(registers) {
-    var rs = {}
-    var table = newTable({
+    let rs = {};
+    let table = newTable({
         'caption': 'Register status',
         'id': 'RegisterStatus',
         'headings': ['Field'].concat(_.map(registers, function(r) { return r.name; })),
     });
-    var tr = table.insertRow();
+    let tr = table.insertRow();
     heading(tr, 'Qi', 'Which reservation station will produce register contents');
 
     function makeStatusSlot(reg) {
-        var Qi = null;
-        var text = document.createTextNode('');
-        var cell = tr.insertCell();
+        let Qi = null;
+        let text = document.createTextNode('');
+        let cell = tr.insertCell();
         cell.appendChild(text);
-        var slot = {
+        let slot = {
             'name': reg.name,
             // Whether the status slot is full. The opposite of "available".
             'full': function() {
@@ -172,9 +164,9 @@ function RegisterStat(registers) {
         return slot;
     }
 
-    registerSlots = _.map(registers, makeStatusSlot);
+    const registerSlots = _.map(registers, makeStatusSlot);
     document.body.appendChild(table);
-    rs.each = function*() { for (var r of registerSlots) yield r; }
+    rs.each = function*() { for (let r of registerSlots) yield r; };
     return rs;
 }
 
@@ -182,9 +174,9 @@ function RegisterStat(registers) {
 function ExecutionUnit(tr, type, name, registerStatus) {
 
     function makeProperty(name, initialValue, hover) {
-        var value = defined(initialValue) ? initialValue : null;
-        var text = document.createTextNode(value === null ? '' : value.toString());
-        var cell = tr.insertCell();
+        let value = defined(initialValue) ? initialValue : null;
+        let text = document.createTextNode(value === null ? '' : value.toString());
+        let cell = tr.insertCell();
         cell.appendChild(text);
         if (defined(hover)) {
             $(cell).hover(hover.curry(name));
@@ -195,9 +187,9 @@ function ExecutionUnit(tr, type, name, registerStatus) {
                     (value = v) === null ? '' : v.toString());
             }
             return value;
-        }
+        };
     }
-    var object = {
+    let object = {
         // Type of this execution unit.
         //
         // 'Load'  -> memory load
@@ -206,7 +198,7 @@ function ExecutionUnit(tr, type, name, registerStatus) {
         // 'Store' -> memory store
         type: type,
         _row: tr,
-        toString: function() { return name },
+        toString: function() { return name; },
         'Name': makeProperty('Name', name),
         'Busy': makeProperty('Busy', false),
         'Op': makeProperty('Op'),
@@ -253,17 +245,17 @@ function ExecutionUnit(tr, type, name, registerStatus) {
         object.Op(instruction.op);
         if (instruction.type === 'Store') {
             object.A(new Address(instruction.rd, instruction.offset));
-            for (var source of instruction.wants()) {
+            for (let source of instruction.wants()) {
                 object.getSource(source);
             }
         }
         else {
-            for (var source of instruction.wants()) {
+            for (let source of instruction.wants()) {
                 object.getSource(source);
             }
         }
         return object;
-    }
+    };
     object.execute = function() {
         if (object.instruction.type === 'Load' && object.A() === '') {
             // Load step 1.
@@ -277,11 +269,11 @@ function ExecutionUnit(tr, type, name, registerStatus) {
         } else if (!object.instruction || object.Qj() || object.Qk() || !object.Busy()) {
             return null;
         }
-        object.Vj(null)
-        object.Vk(null)
-        object.Result(true)
+        object.Vj(null);
+        object.Vk(null);
+        object.Result(true);
         return object;
-    }
+    };
 
     // We are waiting on the execution unit if it is our Qi or Qj source.
     object.waitingOn = function(executionUnit) {
@@ -304,13 +296,13 @@ function ExecutionUnit(tr, type, name, registerStatus) {
     object.clear = function() {
         object.instruction = null;
         object.instructionRow = null;
-        object.A(null)
-        object.Result(null)
-        object.Op(null)
-        object.Qj(null)
-        object.Qk(null)
-        object.Vj(null)
-        object.Vk(null)
+        object.A(null);
+        object.Result(null);
+        object.Op(null);
+        object.Qj(null);
+        object.Qk(null);
+        object.Vj(null);
+        object.Vk(null);
         object.Busy(false);
         _.each(registerStatus.each(), function(rs) {
             if (rs.Qi() === object)
@@ -321,9 +313,9 @@ function ExecutionUnit(tr, type, name, registerStatus) {
 
     $(tr).hover(function() {
         if (object.instructionRow !== null) {
-            var i = object.instructionRow['Instruction'];
+            let i = object.instructionRow['Instruction'];
             console.debug(object.instruction);
-            object.instruction.destination().highlightDestination()
+            object.instruction.destination().highlightDestination();
             $(i).toggleClass('source');
         }
     });
@@ -336,10 +328,10 @@ function ExecutionUnit(tr, type, name, registerStatus) {
 //
 // Args:
 //   registerStatus: the register status object.
-var ReservationStation = function(registerStatus) {
-    var object = {};
+let ReservationStation = function(registerStatus) {
+    let object = {};
 
-    var table = newTable({
+    let table = newTable({
         'caption': 'Reservation stations',
         'id': 'ReservationStations',
         'headings': [
@@ -355,34 +347,34 @@ var ReservationStation = function(registerStatus) {
         ]
     });
 
-    var executionUnits = [];
+    let executionUnits = [];
 
     function build_station(name, quantity) {
         return _.map(_.range(quantity), function(i) {
-            var tr = table.insertRow();
+            let tr = table.insertRow();
             // i is the number of execution units already created of this
             // type. So the rowName is the execution unit type name along
             // with its number.
-            var rowName = name + i.toString();
-            var unit = new ExecutionUnit(tr, name, rowName, registerStatus);
+            let rowName = name + i.toString();
+            let unit = new ExecutionUnit(tr, name, rowName, registerStatus);
             object[rowName] = unit;
             executionUnits.push(unit);
             return unit;
         });
     }
 
-    var units = {
+    let units = {
         'Load': build_station('Load', 2),
         'Add': build_station('Add', 3),
         'Mult': build_station('Mult', 2),
         'Store': build_station('Store', 2),
-    }
+    };
 
     object.issue = function(row, instruction) {
         function busy(executionUnit) {
             return executionUnit.Busy();
         }
-        var station = _.first(_.reject(units[instruction.type], busy));
+        let station = _.first(_.reject(units[instruction.type], busy));
         if (!station) return null;
         else station.issue(row, instruction);
         return station;
@@ -393,23 +385,23 @@ var ReservationStation = function(registerStatus) {
     };
 
     object.each = function*() {
-        for(var unit of executionUnits)
+        for(let unit of executionUnits)
             yield unit;
-    }
+    };
 
     object.writeBack = function(finishedUnit) {
         if (!finishedUnit.Busy()) {
             throw 'Execution Unit attempted writeback without instruction';
         }
-        for(var unit of executionUnits) {
+        for(let unit of executionUnits) {
             unit.resolve(finishedUnit);
         }
         finishedUnit.clear();
         return finishedUnit;
-    }
+    };
 
     return object;
-}
+};
 
 
 function Assembler(registerStatus) {
@@ -422,7 +414,7 @@ function Assembler(registerStatus) {
             'rs': rs,
             'rt': rt,
             'toString': function() {
-                return op + ' ' + rd + ',' + rs + ',' + rt
+                return op + ' ' + rd + ',' + rs + ',' + rt;
             },
             'destination': function() {
                 return registerStatus[rd];
@@ -430,13 +422,13 @@ function Assembler(registerStatus) {
             'wants': function() {
                 return [registerStatus[rs], registerStatus[rt]];
             },
-        }
+        };
     }
 
     // I-type (immediate) instruction
     function IINST(op, type, rd, rs, offset) {
         if (type === 'Store') {
-            var temp = rd;
+            let temp = rd;
             rd = rs;
             rs = temp;
         }
@@ -448,9 +440,9 @@ function Assembler(registerStatus) {
             'offset': offset,
             'toString': function() {
                 if (type !== 'Store')
-                    return op + ' ' + rd + ',' + offset.toString() + '(' + rs + ')'
+                    return op + ' ' + rd + ',' + offset.toString() + '(' + rs + ')';
                 else
-                    return op + ' ' + rs + ',' + offset.toString() + '(' + rd + ')'
+                    return op + ' ' + rs + ',' + offset.toString() + '(' + rd + ')';
             },
             'destination': function() {
                 return registerStatus[rd];
@@ -458,7 +450,7 @@ function Assembler(registerStatus) {
             'wants': function() {
                 return [registerStatus[rs]];
             },
-        }
+        };
     }
 
     return {
@@ -468,31 +460,31 @@ function Assembler(registerStatus) {
         'MULD': RINST.curry('MUL.D').curry('Mult'),
         'DIVD': RINST.curry('DIV.D').curry('Mult'),
         'SD': IINST.curry('S.D').curry('Store'),
-    }
+    };
 }
 
 
-var InstructionStatus = function(reservationStation, table, instruction) {
-    var object = {};
+let InstructionStatus = function(reservationStation, table, instruction) {
+    let object = {};
     instruction['status'] = object;
 
     object['issue'] = function(row, instruction) {
-        var reserved = reservationStation.issue(row, instruction);
+        let reserved = reservationStation.issue(row, instruction);
         if (reserved) {
             instruction.destination().Qi(reserved);
             row['Issue'].text('true');
         }
         return reserved;
-    }
-    object['execute'] = function (row, executionUnit, instruction) {
-        var executed = executionUnit.execute();
+    };
+    object['execute'] = function (row, executionUnit) {
+        let executed = executionUnit.execute();
         if (executed) {
             row['Execute'].text('true');
         }
         return executed;
-    }
+    };
     object['writeResult'] = function (row, executionUnit, instruction) {
-        var wrote = reservationStation.writeBack(executionUnit);
+        let wrote = reservationStation.writeBack(executionUnit);
         console.log(wrote);
         if (wrote) {
             if (instruction.destination().Qi() === executionUnit) {
@@ -502,12 +494,12 @@ var InstructionStatus = function(reservationStation, table, instruction) {
             executionUnit = null;
         }
         return wrote;
-    }
+    };
 
-    var tr = table.insertRow();
-    var row = {};
-    var executionUnit = null;
-    var cells = _.each(instructionStatusColumnNames, function addColumn(colName) {
+    let tr = table.insertRow();
+    let row = {};
+    let executionUnit = null;
+    _.each(instructionStatusColumnNames, function addColumn(colName) {
         return row[colName] = $(tr.insertCell()).text('');
     });
 
@@ -515,7 +507,7 @@ var InstructionStatus = function(reservationStation, table, instruction) {
         $(this).addClass('highlight');
         if (!row['Issue'].text()) {
             instruction.destination().highlightDestination();
-            for (var source of instruction.wants()) {
+            for (let source of instruction.wants()) {
                 source.highlightSource();
             }
         }
@@ -524,7 +516,7 @@ var InstructionStatus = function(reservationStation, table, instruction) {
     object.clearHighlights = function() {
         $(this).removeClass('highlight');
         instruction.destination().clearHighlights();
-        for (var source of instruction.wants()) {
+        for (let source of instruction.wants()) {
             source.clearHighlights();
         }
     };
@@ -540,7 +532,7 @@ var InstructionStatus = function(reservationStation, table, instruction) {
                 object.executionUnit = null;
         }
         else if ('true' === row['Issue'].text()) {
-            object.execute(row, executionUnit, instruction);
+            object.execute(row, executionUnit);
         }
         else {
             executionUnit = object.issue(row, instruction);
@@ -552,8 +544,8 @@ var InstructionStatus = function(reservationStation, table, instruction) {
 };
 
 
-var InstructionStatusTable = function(reservationStation, registerStatus) {
-    var table = newTable({
+let InstructionStatusTable = function(reservationStation) {
+    let table = newTable({
         'caption': 'Instruction Status',
         'id': 'InstructionStatus',
         'headings': instructionStatusColumnNames,
@@ -561,48 +553,44 @@ var InstructionStatusTable = function(reservationStation, registerStatus) {
 
     document.body.appendChild(table);
 
-    var object = {
+    let object = {
         'read': function(instruction) {
             new InstructionStatus(reservationStation,
-                                  table,
-                                  instruction);
+                table,
+                instruction);
         },
-        'each': function*() {
-            for(var inst of instructions)
-                yield inst;
-        }
     };
     return object;
-}
+};
 
 
 $(function(){
-    var regs = new RegisterFile();
-    var registerStat = new RegisterStat(regs);
-    var rs = new ReservationStation(registerStat);
-    var is = new InstructionStatusTable(rs, registerStat);
+    let regs = new RegisterFile();
+    let registerStat = new RegisterStat(regs);
+    let rs = new ReservationStation(registerStat);
+    let is = new InstructionStatusTable(rs);
     rs.addTable();
 
     $('.mastertooltip').hover(function(){
-            // Hover over code
-            var title = $(this).attr('title');
-            $(this).data('tipText', title).removeAttr('title');
-            $('<p>', {
-                'text': title,
-                'class': 'tooltip',
-            }).appendTo('body').fadeIn('slow');
+        // Hover over code
+        let title = $(this).attr('title');
+        $(this).data('tipText', title).removeAttr('title');
+        $('<p>', {
+            'text': title,
+            'class': 'tooltip',
+        }).appendTo('body').fadeIn('slow');
     }, function() {
-            // Hover out code
-            $(this).attr('title', $(this).data('tipText'));
-            $('.tooltip').remove().fadeOut('fast');
+        // Hover out code
+        $(this).attr('title', $(this).data('tipText'));
+        $('.tooltip').remove().fadeOut('fast');
     }).mousemove(function(e) {
-            var mousex = e.pageX + 16; //Get X coordinates
-            var mousey = e.pageY - 32; //Get Y coordinates
-            $('.tooltip')
+        let mousex = e.pageX + 16; //Get X coordinates
+        let mousey = e.pageY - 32; //Get Y coordinates
+        $('.tooltip')
             .css({ top: mousey , left: mousex });
     });
 
-    var asm = new Assembler(registerStat);
+    let asm = new Assembler(registerStat);
     // is.read(asm.LD('F0', 'R1', 0));
     // is.read(asm.MULD('F4', 'F0', 'F2'));
     // is.read(asm.SD('F4', 'R1', 0));

@@ -1,0 +1,22 @@
+{
+  "name": "tomasulo-simulator",
+  "version": "1.0.0",
+  "description": "simulate Tomasulo's Algorithm in the browser",
+  "main": "tomasulo.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nathantypanski/tomasulo-simulator.git"
+  },
+  "author": "",
+  "license": "GPL3",
+  "bugs": {
+    "url": "https://github.com/nathantypanski/tomasulo-simulator/issues"
+  },
+  "homepage": "https://github.com/nathantypanski/tomasulo-simulator#readme",
+  "devDependencies": {
+    "eslint": "^7.15.0"
+  }
+}
