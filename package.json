@@ -17,6 +17,6 @@
   },
   "homepage": "https://github.com/nathantypanski/tomasulo-simulator#readme",
   "devDependencies": {
-    "eslint": "^7.15.0"
+    "eslint": "^9.39.1"
   }
 }
